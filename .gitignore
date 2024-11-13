@@ -1,0 +1,11 @@
+# Ignore these Terraform files
+*.tfvars
+.terraform
+*.terraform.lock*
+*.tfstate*
+
+# Ignore these Git files
+*credentials
+
+# Ignore these other files
+*DS_Store*
