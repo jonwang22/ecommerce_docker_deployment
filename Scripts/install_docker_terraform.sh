@@ -4,6 +4,9 @@
 sudo apt-get update
 sudo apt-get install -y gnupg software-properties-common
 
+# Installing fontconfig and JavaDevKit for Jenkins.
+sudo apt install -y fontconfig openjdk-17-jre
+
 # Installing Hashicorp GPG key
 wget -O- https://apt.releases.hashicorp.com/gpg | \
 gpg --dearmor | \
