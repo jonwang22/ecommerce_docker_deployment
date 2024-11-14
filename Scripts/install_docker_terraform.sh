@@ -33,7 +33,7 @@ sudo apt-get install -y terraform
 
 # Add Docker's official gpg key
 sudo apt-get update
-sudo apt-get install ca-certificates curl
+sudo apt-get install -y ca-certificates curl
 sudo install -m 0755 -d /etc/apt/keyrings
 sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
 sudo chmod a+r /etc/apt/keyrings/docker.asc
@@ -52,3 +52,12 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plug
 sudo groupadd docker
 sudo usermod -aG docker $USER
 newgrp docker
+
+# Installing AWS CLI
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+sudo apt-get install -y unzip
+unzip awscliv2.zip
+sudo ./aws/install
+
+# AWS Cleanup
+rm -rf awscliv2.zip aws
