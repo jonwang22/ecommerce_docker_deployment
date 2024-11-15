@@ -15,32 +15,36 @@ module "VPC" {
 
 module "ALB" {
   source = "./modules/ALB"
-  wl5vpc_id = module.VPC.wl5vpc_id
+  wl6vpc_id = module.VPC.wl6vpc_id
   public_subnet_1_id = module.VPC.public_subnet_1_id
   public_subnet_2_id = module.VPC.public_subnet_2_id
-  wl5frontend1 = module.EC2.wl5frontend1
-  wl5frontend2 = module.EC2.wl5frontend2
+  app1 = module.EC2.app1
+  app2 = module.EC2.app2
 }
 
 module "EC2" {
   source = "./modules/EC2"
-  wl5vpc_id = module.VPC.wl5vpc_id
+  wl6vpc_id = module.VPC.wl6vpc_id
   public_subnet_1_id = module.VPC.public_subnet_1_id
   public_subnet_2_id = module.VPC.public_subnet_2_id
   private_subnet_1_id = module.VPC.private_subnet_1_id
   private_subnet_2_id = module.VPC.private_subnet_2_id
+  nat_gateway_1 = module.VPC.nat_gateway_1
+  nat_gateway_2 = module.VPC.nat_gateway_2
   # public_key_path = var.public_key_path
-  rds_address = module.RDS.rds_address
+  rds_endpoint = module.RDS.rds_endpoint
   db_name = var.db_name
   db_username = var.db_username
   db_password = var.db_password
   rds_db = module.RDS.rds_db
+  dockerhub_username = var.dockerhub_username
+  dockerhub_password = var.dockerhub_password
 }
 
 module "RDS" {
   source = "./modules/RDS/"
-  wl5vpc_id = module.VPC.wl5vpc_id
-  backend_sg = module.EC2.backend_sg
+  wl6vpc_id = module.VPC.wl6vpc_id
+  app_sg = module.EC2.app_sg
   db_name = var.db_name
   db_username = var.db_username
   db_password = var.db_password

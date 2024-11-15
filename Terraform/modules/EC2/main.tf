@@ -26,79 +26,55 @@ resource "local_file" "save_private_key" {
 }
 
 ##################################################
-### FRONTEND ###
+### BASTION ###
 ##################################################
 # Create an EC2 instance in AWS. This resource block defines the configuration of the instance.
 # This EC2 is created in our Public Subnet
-# Frontend AZ1
-resource "aws_instance" "wl5frontend1" {
+# Bastion AZ1
+resource "aws_instance" "bastion1" {
   ami               = var.ami                          # The Amazon Machine Image (AMI) ID used to launch the EC2 instance.
   instance_type     = var.instance_type                # Specify the desired EC2 instance size.
   subnet_id         = var.public_subnet_1_id
   # Attach an existing security group to the instance.
   # Security groups control the inbound and outbound traffic to your EC2 instance.
-  vpc_security_group_ids = [aws_security_group.frontend_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
+  vpc_security_group_ids = [aws_security_group.bastion_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
   key_name          = var.key_name                # The key pair name for SSH access to the instance.
-  user_data         = templatefile("${path.root}/scripts/frontend-setup.sh", 
-    {
-      backend_private_ip = aws_instance.wl5backend1.private_ip
-  })
   
-  # Depends on RDS Instance to be created.
-  depends_on = [aws_instance.wl5backend1]
 
   # Tagging the resource with a Name label. Tags help in identifying and organizing resources in AWS.
   tags = {
-    "Name" : "ecommerce_frontend_az1"
+    "Name" : "ecommerce_bastion_az1"
   }
 }
 
-# Frontend AZ2
-resource "aws_instance" "wl5frontend2" {
+# Bastion AZ2
+resource "aws_instance" "bastion2" {
   ami               = var.ami                          # The Amazon Machine Image (AMI) ID used to launch the EC2 instance.
   instance_type     = var.instance_type                # Specify the desired EC2 instance size.
   subnet_id         = var.public_subnet_2_id
   # Attach an existing security group to the instance.
   # Security groups control the inbound and outbound traffic to your EC2 instance.
-  vpc_security_group_ids = [aws_security_group.frontend_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
+  vpc_security_group_ids = [aws_security_group.bastion_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
   key_name          = var.key_name                # The key pair name for SSH access to the instance.
-  user_data         = templatefile("${path.root}/scripts/frontend-setup.sh", 
-    {
-      backend_private_ip = aws_instance.wl5backend2.private_ip
-  })
   
-  # Depends on RDS Instance to be created.
-  depends_on = [aws_instance.wl5backend2]
 
   # Tagging the resource with a Name label. Tags help in identifying and organizing resources in AWS.
   tags = {
-    "Name" : "ecommerce_frontend_az2"
+    "Name" : "ecommerce_bastion_az2"
   }
 }
 
 # Create a security group named "tf_made_sg" that allows SSH and HTTP traffic.
 # This security group will be associated with the EC2 instance created above.
 # This is Security Group for Jenkins
-resource "aws_security_group" "frontend_sg" { # aws_security_group is the actual AWS resource name. web_ssh is the name stored by Terraform locally for record keeping 
-  vpc_id      = var.wl5vpc_id
-  name        = "WL5 FrontendSG"
-  description = "Security group for Frontend EC2 instances."
+resource "aws_security_group" "bastion_sg" { # aws_security_group is the actual AWS resource name. web_ssh is the name stored by Terraform locally for record keeping 
+  vpc_id      = var.wl6vpc_id
+  name        = "Bastion SG"
+  description = "Security group for Bastion EC2 instances."
   # Ingress rules: Define inbound traffic that is allowed.Allow SSH traffic and HTTP traffic on port 8080 from any IP address (use with caution)
   ingress {
     from_port   = 22
     to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  ingress {
-    from_port   = 3000
-    to_port     = 3000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  ingress {
-    from_port   = 9100
-    to_port     = 9100
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -111,81 +87,94 @@ resource "aws_security_group" "frontend_sg" { # aws_security_group is the actual
   }
   # Tags for the security group
   tags = {
-    "Name"      : "WL5 FrontendSG"                          # Name tag for the security group
+    "Name"      : "Bastion SG"                          # Name tag for the security group
     "Terraform" : "true"                                # Custom tag to indicate this SG was created with Terraform
   }
 }
 
 ##################################################
-### BACKEND ###
+### APP ###
 ##################################################
 # Create an EC2 instance in AWS. This resource block defines the configuration of the instance.
 # This EC2 is created in our Public Subnet
-# Backend AZ1
-resource "aws_instance" "wl5backend1" {
+# App AZ1
+resource "aws_instance" "app1" {
   ami               = var.ami                          # The Amazon Machine Image (AMI) ID used to launch the EC2 instance.
   instance_type     = var.instance_type                # Specify the desired EC2 instance size.
   subnet_id         = var.private_subnet_1_id
   # Attach an existing security group to the instance.
   # Security groups control the inbound and outbound traffic to your EC2 instance.
-  vpc_security_group_ids = [aws_security_group.backend_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
+  vpc_security_group_ids = [aws_security_group.app_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
   key_name          = var.key_name                # The key pair name for SSH access to the instance.
-  user_data         = templatefile("${path.root}/scripts/backend-setup-db-migrate.sh", 
-    {
-      db_name = var.db_name
-      db_username = var.db_username
-      db_password = var.db_password
-      rds_address = var.rds_address
-  })
+  user_data         = base64encode(templatefile("./scripts/deploy.sh", {
+    rds_endpoint = var.rds_endpoint,
+    dockerhub_username = var.dockerhub_username,
+    dockerhub_password = var.dockerhub_password,
+    docker_compose = templatefile("./compose.yml", {
+      rds_endpoint = var.rds_endpoint
+    })
+  }))
 
   # Depends on RDS Instance to be created.
-  depends_on = [var.rds_db]
-
+  depends_on = [
+    var.rds_db,
+    var.nat_gateway_1
+  ]
   # Tagging the resource with a Name label. Tags help in identifying and organizing resources in AWS.
   tags = {
-    "Name" : "ecommerce_backend_az1"
+    "Name" : "ecommerce_app_az1"
   }
 }
 
-# Backend AZ2
-resource "aws_instance" "wl5backend2" {
+# App AZ2
+resource "aws_instance" "app2" {
   ami               = var.ami                          # The Amazon Machine Image (AMI) ID used to launch the EC2 instance.
   instance_type     = var.instance_type                # Specify the desired EC2 instance size.
   subnet_id         = var.private_subnet_2_id
   # Attach an existing security group to the instance.
   # Security groups control the inbound and outbound traffic to your EC2 instance.
-  vpc_security_group_ids = [aws_security_group.backend_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
+  vpc_security_group_ids = [aws_security_group.app_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
   key_name          = var.key_name                # The key pair name for SSH access to the instance.
-  user_data         = templatefile("${path.root}/scripts/backend-setup.sh", 
-    {
-      db_name = var.db_name
-      db_username = var.db_username
-      db_password = var.db_password
-      rds_address = var.rds_address
-  })
+  user_data         = base64encode(templatefile("./scripts/deploy.sh", {
+    rds_endpoint = var.rds_endpoint,
+    docker_user = var.dockerhub_username,
+    docker_pass = var.dockerhub_password,
+    docker_compose = templatefile("./compose.yml", {
+      rds_endpoint = var.rds_endpoint
+    })
+  }))
   
   # Depends on RDS Instance to be created.
-  depends_on = [var.rds_db]
+  depends_on = [
+    var.rds_db,
+    var.nat_gateway_2
+  ]
 
   # Tagging the resource with a Name label. Tags help in identifying and organizing resources in AWS.
   tags = {
-    "Name" : "ecommerce_backend_az2"
+    "Name" : "ecommerce_app_az2"
   }
 }
 
 # Create a security group named "tf_made_sg" that allows SSH and HTTP traffic.
 # This security group will be associated with the EC2 instance created above.
 # This is Security Group for Jenkins
-resource "aws_security_group" "backend_sg" { # aws_security_group is the actual AWS resource name. web_ssh is the name stored by Terraform locally for record keeping 
-  vpc_id      = var.wl5vpc_id
-  name        = "WL5 BackendSG"
-  description = "Security group for Backend EC2 instances"
+resource "aws_security_group" "app_sg" { # aws_security_group is the actual AWS resource name. web_ssh is the name stored by Terraform locally for record keeping 
+  vpc_id      = var.wl6vpc_id
+  name        = "App SG"
+  description = "Security group for App EC2 instances"
   # Ingress rules: Define inbound traffic that is allowed.Allow SSH traffic and HTTP traffic on port 8080 from any IP address (use with caution)
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/20"]
   }
   ingress {
     from_port   = 8000
@@ -208,7 +197,7 @@ resource "aws_security_group" "backend_sg" { # aws_security_group is the actual 
   }
   # Tags for the security group
   tags = {
-    "Name"      : "WL5 BackendSG"                          # Name tag for the security group
+    "Name"      : "App SG"                              # Name tag for the security group
     "Terraform" : "true"                                # Custom tag to indicate this SG was created with Terraform
   }
 }

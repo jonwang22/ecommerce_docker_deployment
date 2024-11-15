@@ -36,3 +36,15 @@ variable db_password {
   type        = string
   sensitive   = true
 }
+
+### DOCKER VARIABLES
+variable dockerhub_username {
+  description = "Docker Hub Username"
+  type        = string
+}
+
+variable dockerhub_password {
+  description = "Docker Hub Password"
+  type        = string
+  sensitive   = true
+}

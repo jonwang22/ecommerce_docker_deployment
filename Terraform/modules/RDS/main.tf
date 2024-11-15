@@ -18,29 +18,29 @@ resource "aws_db_instance" "postgres_db" {
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
 
   tags = {
-    Name = "WL5 Ecommerce Postgres DB"
+    Name = "Ecommerce Postgres DB"
   }
 }
 
 resource "aws_db_subnet_group" "rds_subnet_group" {
-  name       = "wl5_rds_subnet_group"
+  name       = "rds_subnet_group"
   subnet_ids = [var.private_subnet_1_id, var.private_subnet_2_id]
 
   tags = {
-    Name = "WL5 RDS subnet group"
+    Name = "RDS subnet group"
   }
 }
 
 resource "aws_security_group" "rds_sg" {
   name        = "rds_sg"
   description = "Security group for RDS"
-  vpc_id      = var.wl5vpc_id
+  vpc_id      = var.wl6vpc_id
 
   ingress {
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
-    security_groups = [var.backend_sg]
+    security_groups = [var.app_sg]
   }
 
   ingress {

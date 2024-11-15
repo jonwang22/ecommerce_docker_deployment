@@ -1,11 +1,11 @@
 ### VPC VARIABLES ###
-variable wl5vpc_id {}
+variable wl6vpc_id {}
 
 variable public_subnet_1_id {}
 
 variable public_subnet_2_id {}
 
 ### EC2 VARIABLES ###
-variable "wl5frontend1" {}
+variable "app1" {}
 
-variable "wl5frontend2" {}
+variable "app2" {}

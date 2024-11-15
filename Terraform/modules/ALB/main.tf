@@ -1,8 +1,8 @@
 ##################################################
 ### APPLICATION LOAD BALANCER ###
 ##################################################
-resource "aws_lb" "wl5alb" {
-  name               = "WL5-ALB"
+resource "aws_lb" "alb" {
+  name               = "ALB"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
@@ -11,7 +11,7 @@ resource "aws_lb" "wl5alb" {
   enable_deletion_protection = false
 
   tags = {
-    Environment = "WL5 Load Balancer Prod"
+    Environment = "App Load Balancer"
   }
 }
 
@@ -19,8 +19,8 @@ resource "aws_lb" "wl5alb" {
 ### ALB SECURITY GROUP ###
 ##################################################
 resource "aws_security_group" "alb_sg" {
-  name   = "wl5_alb_sg"
-  vpc_id = var.wl5vpc_id
+  name   = "alb_sg"
+  vpc_id = var.wl6vpc_id
 
   ingress {
     from_port   = 80
@@ -44,7 +44,7 @@ resource "aws_security_group" "alb_sg" {
   }
 
   tags = {
-    Name = "wl5-alb-security-group"
+    Name = "alb-security-group"
   }
 }
 
@@ -52,7 +52,7 @@ resource "aws_security_group" "alb_sg" {
 ### LISTENERS ###
 ##################################################
 resource "aws_lb_listener" "http_listener" {
-  load_balancer_arn = aws_lb.wl5alb.arn
+  load_balancer_arn = aws_lb.alb.arn
   port              = 80
   protocol          = "HTTP"
 
@@ -66,10 +66,10 @@ resource "aws_lb_listener" "http_listener" {
 ### TARGET GROUP ###
 ##################################################
 resource "aws_lb_target_group" "alb_tg" {
-  name     = "WL5-TargetGroup"
+  name     = "TargetGroup"
   port     = 3000
   protocol = "HTTP"
-  vpc_id   = var.wl5vpc_id
+  vpc_id   = var.wl6vpc_id
 
   health_check {
     path                = "/"
@@ -87,12 +87,12 @@ resource "aws_lb_target_group" "alb_tg" {
 # Target Group Attachment for each EC2 instance
 resource "aws_lb_target_group_attachment" "alb_tg_attachment-1" {
   target_group_arn = aws_lb_target_group.alb_tg.arn
-  target_id        = var.wl5frontend1  # Replace with your EC2 instance ID
+  target_id        = var.app1  # Replace with your EC2 instance ID
   port             = 3000  # Matches the target group port
 }
 
 resource "aws_lb_target_group_attachment" "alb_tg_attachment-2" {
   target_group_arn = aws_lb_target_group.alb_tg.arn
-  target_id        = var.wl5frontend2  # Replace with your EC2 instance ID
+  target_id        = var.app2  # Replace with your EC2 instance ID
   port             = 3000  # Matches the target group port
 }
