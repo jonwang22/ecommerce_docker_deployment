@@ -18,6 +18,27 @@ Be sure to document each step in the process and explain WHY each step is import
 
 3. Create a t3.medium EC2 called "Docker_Terraform". This will be your Jenkins NODE instance. Install Java 17, Terraform, Docker, and AWS CLI onti it.  For this workload it would be easiest to use the same .pem key for both of these instances to avoid confusion when trying to connect them.
 
+NOTE: Getting around using IAM User long lived credentials for Secret and Secret Access keys, I created an IAM role for EC2 and an EC2 Instance Profile so that Terraform Server can assume that role and conduct its build/operations as needed on the account.
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "ec2.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole",
+            "Condition": {
+                "StringEquals": {
+                    "ec2:InstanceProfile": "arn:aws:iam::783764590292:instance-profile/TerraformEC2Role"
+                }
+            }
+        }
+    ]
+}
+```
+
    NOTE: Make sure you configure AWS CLI and that Terraform can create infrastructure using your credentials (Optional: Consider adding a verification in your pipeline stage to check for this to avoid errors).
 
 5. The next few steps will guide you on how to set up a Jenkins Node Agent.
