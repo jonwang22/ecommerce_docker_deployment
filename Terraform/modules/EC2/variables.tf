@@ -33,7 +33,6 @@ variable rds_endpoint {}
 # variable db_name {}
 # variable db_username {}
 # variable db_password {}
-variable rds_db {}
 
 ### DOCKER VARIABLES
 variable dockerhub_username {}
