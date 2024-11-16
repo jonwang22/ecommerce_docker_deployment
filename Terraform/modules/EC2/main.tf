@@ -117,7 +117,7 @@ resource "aws_instance" "app1" {
 
   # Depends on RDS Instance to be created.
   depends_on = [
-    var.rds_db,
+    var.rds_endpoint,
     var.nat_gateway_1
   ]
   # Tagging the resource with a Name label. Tags help in identifying and organizing resources in AWS.
@@ -146,7 +146,7 @@ resource "aws_instance" "app2" {
   
   # Depends on RDS Instance to be created.
   depends_on = [
-    var.rds_db,
+    var.rds_endpoint,
     var.nat_gateway_2
   ]
 

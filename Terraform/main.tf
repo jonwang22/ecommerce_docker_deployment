@@ -33,10 +33,9 @@ module "EC2" {
   nat_gateway_2 = module.VPC.nat_gateway_2
   # public_key_path = var.public_key_path
   rds_endpoint = module.RDS.rds_endpoint
-  db_name = var.db_name
-  db_username = var.db_username
-  db_password = var.db_password
-  rds_db = module.RDS.rds_db
+  # db_name = var.db_name
+  # db_username = var.db_username
+  # db_password = var.db_password
   dockerhub_username = var.dockerhub_username
   dockerhub_password = var.dockerhub_password
 }

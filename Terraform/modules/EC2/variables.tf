@@ -30,9 +30,9 @@ variable "key_name" {
 
 ### RDS VARIABLES
 variable rds_endpoint {}
-variable db_name {}
-variable db_username {}
-variable db_password {}
+# variable db_name {}
+# variable db_username {}
+# variable db_password {}
 variable rds_db {}
 
 ### DOCKER VARIABLES
