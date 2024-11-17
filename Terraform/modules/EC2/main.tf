@@ -124,6 +124,12 @@ resource "aws_instance" "app1" {
   tags = {
     "Name" : "ecommerce_app_az1"
   }
+
+  # Creating a create_before_destroy lifecycle so that we create a new instance every terraform apply and then destroy the old instance.
+  # This allows us to run user_data on the instance every time we execute a terraform apply.
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # App AZ2
@@ -153,6 +159,12 @@ resource "aws_instance" "app2" {
   # Tagging the resource with a Name label. Tags help in identifying and organizing resources in AWS.
   tags = {
     "Name" : "ecommerce_app_az2"
+  }
+
+  # Creating a create_before_destroy lifecycle so that we create a new instance every terraform apply and then destroy the old instance.
+  # This allows us to run user_data on the instance every time we execute a terraform apply.
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
