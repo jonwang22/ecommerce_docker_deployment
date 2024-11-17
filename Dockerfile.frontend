@@ -2,13 +2,10 @@ FROM node:14
 
 WORKDIR /app
 
-COPY ./frontend /app
+COPY ./frontend/ /app
 
 RUN npm ci
 
 EXPOSE 3000
 
-# Set environment variable for Node.js
-ENV NODE_OPTIONS=--openssl-legacy-provider
-
-CMD ["npm", "start"]
+ENTRYPOINT ["npm", "start"]
