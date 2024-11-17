@@ -3,6 +3,7 @@ pipeline {
 
   environment {
     DOCKER_CREDS = credentials('docker-hub-credentials')
+    DB_PASSWORD = credentials('db_password')
   }
 
   stages {
@@ -71,7 +72,8 @@ pipeline {
             terraform init
             terraform apply -auto-approve \
               -var="dockerhub_username=${DOCKER_CREDS_USR}" \
-              -var="dockerhub_password=${DOCKER_CREDS_PSW}"
+              -var="dockerhub_password=${DOCKER_CREDS_PSW}" \
+              -var="db_password=${DB_PASSWORD}"
           '''
         }
       }
