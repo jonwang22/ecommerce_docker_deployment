@@ -8,7 +8,7 @@ services:
       - RUN_MIGRATIONS=${run_migrations}
     ports:
       - "8000:8000"
-    command: >
+    entrypoint: >
           sh -c "set -e &&
                 if [ '$RUN_MIGRATIONS' == 'true' ]; then
                     echo 'Running initial migration and data loading...' &&
