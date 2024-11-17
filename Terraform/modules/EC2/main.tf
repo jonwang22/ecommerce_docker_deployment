@@ -111,7 +111,8 @@ resource "aws_instance" "app1" {
     dockerhub_username = var.dockerhub_username,
     dockerhub_password = var.dockerhub_password,
     docker_compose = templatefile("${path.root}/compose.yml", {
-      rds_endpoint = var.rds_endpoint
+      rds_endpoint = var.rds_endpoint,
+      run_migrations = "true"
     })
   }))
 
@@ -146,7 +147,8 @@ resource "aws_instance" "app2" {
     docker_user = var.dockerhub_username,
     docker_pass = var.dockerhub_password,
     docker_compose = templatefile("./compose.yml", {
-      rds_endpoint = var.rds_endpoint
+      rds_endpoint = var.rds_endpoint,
+      run_migrations = "false"
     })
   }))
   
