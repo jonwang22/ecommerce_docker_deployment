@@ -81,6 +81,7 @@ pipeline {
   }
 
   post {
+    agent { label 'build-node' }
     always {
       sh '''
         docker logout
