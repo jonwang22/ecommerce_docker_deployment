@@ -106,11 +106,11 @@ resource "aws_instance" "app1" {
   # Security groups control the inbound and outbound traffic to your EC2 instance.
   vpc_security_group_ids = [aws_security_group.app_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
   key_name          = var.key_name                # The key pair name for SSH access to the instance.
-  user_data         = base64encode(templatefile("./scripts/deploy.sh", {
+  user_data         = base64encode(templatefile("${path.root}/scripts/deploy.sh", {
     rds_endpoint = var.rds_endpoint,
     dockerhub_username = var.dockerhub_username,
     dockerhub_password = var.dockerhub_password,
-    docker_compose = templatefile("./compose.yml", {
+    docker_compose = templatefile("${path.root}/compose.yml", {
       rds_endpoint = var.rds_endpoint
     })
   }))
