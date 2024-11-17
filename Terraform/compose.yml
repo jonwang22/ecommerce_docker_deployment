@@ -10,7 +10,7 @@ services:
       - "8000:8000"
     command: >
           sh -c "set -e &&
-                if [[ '${RUN_MIGRATIONS}' == 'true' ]]; then
+                if [ '$RUN_MIGRATIONS' == 'true' ]; then
                     echo 'Running initial migration and data loading...' &&
                     python manage.py migrate && 
                     python manage.py dumpdata --database=sqlite --natural-foreign --natural-primary -e contenttypes -e auth.Permission --indent 4 > datadump.json &&
