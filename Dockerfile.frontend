@@ -6,8 +6,11 @@ COPY ./frontend /app
 
 RUN pip install -r requirements.txt
 
-RUN npm install
+RUN npm ci
 
 EXPOSE 3000
+
+# Set environment variable for Node.js
+ENV NODE_OPTIONS=--openssl-legacy-provider
 
 ENTRYPOINT ["npm", "start"]
