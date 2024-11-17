@@ -75,7 +75,7 @@ sudo usermod -aG docker $USER
 newgrp docker
 
 # Logging into DockerHub
-echo ${docker_pass} | docker login -u ${docker_user} --password-stdin
+echo ${dockerhub_password} | docker login -u ${dockerhub_username} --password-stdin
 
 # Create docker-compose.yaml file
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Creating app directory..."

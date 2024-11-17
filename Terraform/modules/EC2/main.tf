@@ -39,7 +39,7 @@ resource "aws_instance" "bastion1" {
   # Security groups control the inbound and outbound traffic to your EC2 instance.
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
   key_name          = var.key_name                # The key pair name for SSH access to the instance.
-  
+  user_data         = templatefile("./scripts/bastion-setup.sh",{})
 
   # Tagging the resource with a Name label. Tags help in identifying and organizing resources in AWS.
   tags = {
@@ -56,7 +56,7 @@ resource "aws_instance" "bastion2" {
   # Security groups control the inbound and outbound traffic to your EC2 instance.
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
   key_name          = var.key_name                # The key pair name for SSH access to the instance.
-  
+  user_data         = templatefile("./scripts/bastion-setup.sh",{})
 
   # Tagging the resource with a Name label. Tags help in identifying and organizing resources in AWS.
   tags = {
@@ -106,11 +106,11 @@ resource "aws_instance" "app1" {
   # Security groups control the inbound and outbound traffic to your EC2 instance.
   vpc_security_group_ids = [aws_security_group.app_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
   key_name          = var.key_name                # The key pair name for SSH access to the instance.
-  user_data         = base64encode(templatefile("${path.root}/scripts/deploy.sh", {
+  user_data         = base64encode(templatefile("./scripts/deploy.sh", {
     rds_endpoint = var.rds_endpoint,
     dockerhub_username = var.dockerhub_username,
     dockerhub_password = var.dockerhub_password,
-    docker_compose = templatefile("${path.root}/compose.yml", {
+    docker_compose = templatefile("./compose.yml", {
       rds_endpoint = var.rds_endpoint,
       run_migrations = "true"
     })
@@ -144,8 +144,8 @@ resource "aws_instance" "app2" {
   key_name          = var.key_name                # The key pair name for SSH access to the instance.
   user_data         = base64encode(templatefile("./scripts/deploy.sh", {
     rds_endpoint = var.rds_endpoint,
-    docker_user = var.dockerhub_username,
-    docker_pass = var.dockerhub_password,
+    dockerhub_username = var.dockerhub_username,
+    dockerhub_password = var.dockerhub_password,
     docker_compose = templatefile("./compose.yml", {
       rds_endpoint = var.rds_endpoint,
       run_migrations = "false"
