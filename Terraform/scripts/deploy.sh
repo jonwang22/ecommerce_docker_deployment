@@ -72,6 +72,7 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plug
 ### Post Install Docker Group
 sudo groupadd docker
 sudo usermod -aG docker $USER
+sudo usermod -aG docker jenkins
 sudo usermod -aG docker ubuntu
 newgrp docker
 
