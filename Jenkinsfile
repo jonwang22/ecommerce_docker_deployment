@@ -10,7 +10,22 @@ pipeline {
       agent any
       steps {
         sh '''#!/bin/bash
-        <code to build the application>
+        python3.9 -m venv venv
+        source venv/bin/activate
+        pip install --upgrade pip
+        pip install -r backend/requirements.txt
+        
+        # Check if Node.js and npm are installed, otherwise install them
+        if ! command -v node &> /dev/null; then
+          curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+          sudo apt-get install -y nodejs
+        fi
+
+        # Installing Frontend
+        cd frontend
+        export NODE_OPTIONS=--openssl-legacy-provider
+        export CI=false
+        npm ci
         '''
       }
     }
@@ -19,7 +34,7 @@ pipeline {
       agent any
       steps {
         sh '''#!/bin/bash
-        <code to activate virtual environment>
+        source venv/bin/activate
         pip install pytest-django
         python backend/manage.py makemigrations
         python backend/manage.py migrate
@@ -48,14 +63,14 @@ pipeline {
         
         // Build and push backend
         sh '''
-          docker build -t <backend image tagged for dockerhub>:latest -f Dockerfile.backend .
-          docker push <backend image tagged for dockerhub:latest
+          docker build -t jonwang22/ecommerce_backend:latest -f Dockerfile.backend .
+          docker push jonwang22/ecommerce_backend:latest
         '''
         
         // Build and push frontend
         sh '''
-          docker build -t <frontent image tagged for dockerhub>:latest -f Dockerfile.frontend .
-          docker push <frontend image tagged for dockerhub>:latest
+          docker build -t jonwang22/ecommerce_frontend:latest -f Dockerfile.frontend .
+          docker push jonwang22/ecommerce_frontend:latest
         '''
       }
     }
