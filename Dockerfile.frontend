@@ -4,8 +4,6 @@ WORKDIR /app
 
 COPY ./frontend /app
 
-RUN pip install -r requirements.txt
-
 RUN npm ci
 
 EXPOSE 3000
