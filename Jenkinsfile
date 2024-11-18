@@ -82,11 +82,12 @@ pipeline {
 
   post {
     always {
-      agent { label 'build-node' }
-      sh '''
-        docker logout
-        docker system prune -f
-      '''
+      node('build-node') {
+        sh '''
+          docker logout
+          docker system prune -f
+        '''
+      }
     }
   }
 }
