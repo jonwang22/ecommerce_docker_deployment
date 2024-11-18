@@ -1,16 +1,32 @@
-# Kura Labs Cohort 5- Deployment Workload 6
+# E-Commerce Website Docker Deployment
 
-
----
-
-
-## Containerization
+## PURPOSE
 
 Welcome to Deployment Workload 6! In Workload 5 we used Terraform to spin up our whole production environment as well as deploy our application.. right?  Well it did for some people and even then it was complicated.  Let's see how Docker can make our lives a little easier.  
 
 Be sure to document each step in the process and explain WHY each step is important to the pipeline.
 
-## Instructions
+## STEPS
+
+### <ins>Ops Environment Setup</ins>
+
+### <ins>Terraform</ins>
+
+### <ins>User Data and Deploy Script</ins>
+
+### <ins>Docker</ins>
+
+### <ins>Jenkins Pipeline</ins>
+
+### <ins>Monitoring</ins>
+
+## SYSTEM DESIGN
+
+## ISSUES/TROUBLESHOOTING
+
+## OPTIMIZATION
+
+## CONCLUSION
 
 1. Clone this repo to your GitHub account and call it "ecommerce_docker_deployment".
 
