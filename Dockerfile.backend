@@ -12,6 +12,8 @@ RUN python manage.py makemigrations payments
 
 RUN python manage.py makemigrations product
 
+RUN chmod +x /app/django_start.sh
+
 EXPOSE 8000
 
-ENTRYPOINT ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+ENTRYPOINT ["./django_start.sh"]
