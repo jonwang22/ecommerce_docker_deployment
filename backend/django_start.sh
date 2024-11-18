@@ -12,6 +12,4 @@ else
     python manage.py migrate;
 fi
 
-[ -f db.sqlite3 ] && rm -f db.sqlite3
-
 python manage.py runserver 0.0.0.0:8000
