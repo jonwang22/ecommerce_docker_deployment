@@ -10,9 +10,15 @@ Be sure to document each step in the process and explain WHY each step is import
 
 ### <ins>Ops Environment Setup</ins>
 
-### <ins>Terraform</ins>
+#### <ins>Jenkins Setup</ins>
 
-### <ins>User Data and Deploy Script</ins>
+#### <ins>Docker & Terraform Setup</ins>
+
+
+
+### <ins>Infrastructure as Code - Terraform</ins>
+
+### <ins>Terraform EC2 User Data and Deploy Script</ins>
 
 ### <ins>Docker</ins>
 
@@ -24,6 +30,7 @@ Be sure to document each step in the process and explain WHY each step is import
 ![Workload6](https://github.com/user-attachments/assets/4c48d72e-2325-452b-af3c-eb0487ca8651)
 
 ## ISSUES/TROUBLESHOOTING
+* Creating script within compose.yml and pushing that into user_data to create the docker-compose.yml file needed to create the containers we need for our app. I was not able to figure out how to write the script correctly in order for it to be inserted into another script that will create the docker-compose.yml. To circumvent this, I had to create a completely separate script within the backend directory and reference that script to execute within the backend dockerfile.
 
 ## OPTIMIZATION
 
