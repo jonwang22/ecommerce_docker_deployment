@@ -21,6 +21,7 @@ Be sure to document each step in the process and explain WHY each step is import
 ### <ins>Monitoring</ins>
 
 ## SYSTEM DESIGN
+![Workload6](https://github.com/user-attachments/assets/4c48d72e-2325-452b-af3c-eb0487ca8651)
 
 ## ISSUES/TROUBLESHOOTING
 
