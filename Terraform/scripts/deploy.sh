@@ -14,7 +14,7 @@ echo "$SSH_PUB_KEY" >> /home/ubuntu/.ssh/authorized_keys
 sudo apt install wget -y
 
 # Download and install Node Exporter
-NODE_EXPORTER_VERSION="1.5.0"
+NODE_EXPORTER_VERSION="1.6.0"
 wget https://github.com/prometheus/node_exporter/releases/download/v$NODE_EXPORTER_VERSION/node_exporter-$NODE_EXPORTER_VERSION.linux-amd64.tar.gz
 tar xvfz node_exporter-$NODE_EXPORTER_VERSION.linux-amd64.tar.gz
 sudo mv node_exporter-$NODE_EXPORTER_VERSION.linux-amd64/node_exporter /usr/local/bin/
@@ -68,6 +68,9 @@ sudo apt-get update
 
 ### Install Docker Packages
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+docker --version
+
+sleep 60
 
 ### Post Install Docker Group
 sudo groupadd docker
@@ -95,7 +98,9 @@ docker compose pull
 
 # Run docker compose up and run containers in the detached mode(background) and force recreate the containers
 docker compose up -d --force-recreate
+echo "Docker services deployed."
 
 # Logout of docker and prune the system
 docker logout
 docker system prune -f
+echo "Cleanup completed."
