@@ -2,19 +2,40 @@
 
 ## PURPOSE
 
-Welcome to Deployment Workload 6! In Workload 5 we used Terraform to spin up our whole production environment as well as deploy our application.. right?  Well it did for some people and even then it was complicated.  Let's see how Docker can make our lives a little easier.  
+In the previous workload, we used Jenkins and Terraform to deploy an ecommerce application. In this one, the requirements are similar but adding Docker in our deployment infrastructure. We're going to deploy our frontend and backend portions of our application to containers. We'll create a Jenkins CI/CD pipeline to build and push our images to Dockerhub, then initiate Terraform to build our infrastructure and run our user data scripts on our EC2 instances to setup and use docker compose to deploy our app onto containers.
 
-Be sure to document each step in the process and explain WHY each step is important to the pipeline.
+We're going to modify our infrastructure a bit from the previous deployment and place our containers into our private EC2 instance and have our Application Load Balancer route traffic to the containers. Our public subnet will just contain bastion EC2s for us to SSH onto our private EC2 instances to check on our logs and troubleshoot any issues we may see during deployment.
+
+The situation for this workload is this. A new E-Commerce company wants to deploy their application to AWS Cloud Infrastructure that is secure, available, and fault tolerant. They also want to utilize Infrastructure as Code as well as a CICD pipeline to be able to spin up or modify infrastructure as needed whenever an update is made to the application source code.
 
 ## STEPS
 
 ### <ins>Ops Environment Setup</ins>
 
+First we need to clone the [github repo of the source code](https://github.com/kura-labs-org/C5-Deployment-Workload-6/tree/main) so we can customize it for our use. Below are the steps on how to do so.
+
+1. Create new repo on github called "ecommerce_docker_deployment".
+2. Run `git clone $SOURCE_REPO`
+3. Navigate to the repo and then run the following commands.
+```
+git remote rename origin upstream           #Changing the current remote origin repo to be named upstream
+git remote add origin $WORKING_REPO         #Adding new remote origin repo to be assigned to desired repo
+git branch -M main                          #Forces the current branch to be renamed "main"
+git push -u origin main                     #Sets the upstream to origin remote repo and tracks main branch
+```
+4. Now your new repo should contain all the files from the source repo.
+5. Run `git clone $WORKING_REPO` to pull down the repo you just created and will work in.
+6. Delete the `$SOURCE_REPO` locally since it is not needed anymore.
+
+Now that we have our working repository, we'll need to create a "Jenkins" server, a "Docker_Terraform" server, and "Monitoring" server. The Jenkins server will use the Docker_Terraform server as a build_node for this deployment.
+
 #### <ins>Jenkins Setup</ins>
+
+For our Jenkins server, we'll be using a t3.micro instance. 
 
 #### <ins>Docker & Terraform Setup</ins>
 
-
+#### <ins>Monitoring</ins>
 
 ### <ins>Infrastructure as Code - Terraform</ins>
 
@@ -24,7 +45,6 @@ Be sure to document each step in the process and explain WHY each step is import
 
 ### <ins>Jenkins Pipeline</ins>
 
-### <ins>Monitoring</ins>
 
 ## SYSTEM DESIGN
 ![Workload6](https://github.com/user-attachments/assets/4c48d72e-2325-452b-af3c-eb0487ca8651)
