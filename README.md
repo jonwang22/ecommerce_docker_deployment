@@ -173,10 +173,43 @@ Contains:
 
 ### <ins>Terraform EC2 User Data and Deploy Script</ins>
 
+For our EC2 User_Data, we will be running our `deploy.sh` script. You can find the [deploy.sh script here](https://github.com/jonwang22/ecommerce_docker_deployment/blob/main/Terraform/scripts/deploy.sh). This script will install node exporter to track server metrics, install docker, create our docker-compose.yml file from our compose.yml file, run docker compose pull to pull the images from Docker Hub, and then run docker compose up to spin up our containers.
+
+With our compose file, we need to make sure that we can build the images we pull from Docker Hub. Instead of having a script within the compose file, I created a separate script that will run my DB migrations on a single instance with a unique flag for running migrations. This flag is set on each App EC2 under user_data for creating docker-compose.yml. The backend script can be [found here](https://github.com/jonwang22/ecommerce_docker_deployment/blob/main/backend/django_start.sh). Our compose file is now lightweight and only contains the necessary information for docker compose to run the services.
+
 ### <ins>Docker</ins>
+
+For Docker, we need to create our Docker Compose file on our Terraform created EC2 instances. In order to do this, we're leveraging a compose.yml template file, along with EC2 User_Data. As Terraform builds our infrastructure and begins building our App EC2 instances, our `deploy.sh` script will handle all the installations necessary for Docker and this is where the `docker-compose.yml` file gets created. Once created, Docker will then run a `docker compose pull` to pull the images built by Jenkins from our Docker Hub, then run a `docker compose up` to spin up those containers automatically. 
+
+We'll also need to create our Dockerfiles for both Frontend and Backend to be able to build our images via Jenkins pipeline. You can find the files here. [Frontend](https://github.com/jonwang22/ecommerce_docker_deployment/blob/main/Dockerfile.frontend) and [Backend](https://github.com/jonwang22/ecommerce_docker_deployment/blob/main/Dockerfile.backend).
 
 ### <ins>Jenkins Pipeline</ins>
 
+The Jenkins pipeline will contain the following stages. 
+
+#### <ins>Build</ins>
+
+The "Build" stage is making sure we have the correct version dependencies and we have the proper version of python for our application.
+
+#### <ins>Test</ins>
+
+The "Test" stage is testing our unit tests that we have written for our backend. We need to make sure that we set our default database to the SQLite database and not the RDS Postgres DB because it doesn't exist yet. I ended up creating a separate Settings.py file called `settings-test.py` and setting the default db to SQLite. 
+
+#### <ins>Cleanup</ins>
+
+The "Cleanup" stage is cleaning the build-node by pruning Docker system and performing a git clean preserving the tfstate file and .terraform directory. This ensures that we refresh the source code in our build-node's workspace and we're updating our environments as we go but maintain the infrastructure with the tfstate file.
+
+#### <ins>Build & Push Image</ins>
+
+The "Build & Push Image" stage is going to build our Dockerfiles for Frontend and Backend into images and push these images into Docker Hub. We do this so that we will always have up to date images depending on whatever source code updates we have or make to our repository.
+
+#### <ins>Infrastructure</ins>
+
+The "Infrastructure" stage will perform all our Terraform actions and build out our infrastructure. This is where all the magic automation happens and if everything is configured properly and written properly then our application will be deployed and we can access our app.
+
+#### <ins>Post</ins>
+
+The "Post" step at the end of the pipeline has an Always flag and will always run after the pipeline regardless of the status of the pipeline (Success vs Failure). This post step needs to run to clean up our build-node instance by logging out of Docker and performing a Docker system prune. 
 
 ## SYSTEM DESIGN
 ![Workload6](https://github.com/user-attachments/assets/4c48d72e-2325-452b-af3c-eb0487ca8651)
@@ -184,177 +217,18 @@ Contains:
 ## ISSUES/TROUBLESHOOTING
 * Creating script within compose.yml and pushing that into user_data to create the docker-compose.yml file needed to create the containers we need for our app. I was not able to figure out how to write the script correctly in order for it to be inserted into another script that will create the docker-compose.yml. To circumvent this, I had to create a completely separate script within the backend directory and reference that script to execute within the backend dockerfile.
 
+* Test stage defaults to RDS PG instance and not SQLite DB. In order to successfully run test commands and pytests, need to set default to SQLite DB but then also make sure that during our deployment, we reference the RDS DB for the container when we run manage.py on the container.
+
 ## OPTIMIZATION
+
+1. Separate Frontend and Backend into their own instances rather than living on the same instance to create some separation. It might not be necessary since the App server is private already.
+
+2. Put the RDS DB into its own subnet.
+
+3. Figure out how to make the compose.yml script transfer and create into a docker-compose.yml without using a separate script to run on the backend dockerfile.
 
 ## CONCLUSION
 
-1. Clone this repo to your GitHub account and call it "ecommerce_docker_deployment".
+Great workload to learn about Docker and using containers in an application setting. Using Jenkins, Terraform, and Docker together in one single deployment has been really fun and cool.
 
-2. Create a t3.micro EC2 called "Jenkins". This will be your Jenkins Manager instance. Install Jenkins and Java 17 onto it.
-
-3. Create a t3.medium EC2 called "Docker_Terraform". This will be your Jenkins NODE instance. Install Java 17, Terraform, Docker, and AWS CLI onti it.  For this workload it would be easiest to use the same .pem key for both of these instances to avoid confusion when trying to connect them.
-
-NOTE: Getting around using IAM User long lived credentials for Secret and Secret Access keys, I created an IAM role for EC2 and an EC2 Instance Profile so that Terraform Server can assume that role and conduct its build/operations as needed on the account.
-
-   NOTE: Make sure you configure AWS CLI and that Terraform can create infrastructure using your credentials (Optional: Consider adding a verification in your pipeline stage to check for this to avoid errors).
-
-5. The next few steps will guide you on how to set up a Jenkins Node Agent.
-
-  a. Make sure both instances are running and then log into the Jenkins console in the Jenkins Manager instance.  On the left side of the home page under the navigation panel and "Build Queue", Click on "Build Executor Status"
-
-  b. Click on "New Node"
-
-  c. Name the node "build-node" and select "Permanent Agent"
-
-  d. On the next screen,
-  
-      i. "Name" should read "build-node"
-
-      ii. "Remote root directory" == "/home/ubuntu/agent"
-
-      iii. "Labels" == "build-node"
-
-      iv. "Usage" == "Only build jobs with label expressions matching this node"
-
-      v. "Launch method" == "Launch agents via SSH"
-
-      vi. "Host" is the public IP address of the Node Server
-
-      vii. Click on "+ ADD" under "Credentials" and select "Jenkins".
-
-      viii. Under "Kind", select "SSH Username with private key"
-
-      ix. "ID" == "build-node"
-
-      x. "Username" == "ubuntu"
-
-      xi. "Private Key" == "Enter directly" (paste the entire private key of the Jenkins node instance here. This must be the .pem file)
-
-      xi. Click "Add" and then select the credentials you just created.  
-
-      xii. "Host Key Verification Strategy" == "Non verifying Verification Strategy"
-
-      xiii. Click on "Save"
-
-   e. Back on the Dashboard, you should see "build-node" under "Build Executor Status".  Click on it and then view the logs.  If this was successful it will say that the node is "connected and online".
-    
-5. Create terraform files that will create the following infrastructure:
-
-```
-- 1x Custom VPC in us-east-1
-- 2x Availability zones in us-east-1a and us-east-1b
-- A private and public subnet in EACH AZ
-- An EC2 in each subnet (EC2s in the public subnets are for the bastion host, the EC2s in the private subnets are for the front AND backend containers of the application) Name the EC2's: "ecommerce_bastion_az1", "ecommerce_app_az1", "ecommerce_bastion_az2", "ecommerce_app_az2"
-- A load balancer that will direct the inbound traffic to either of the public subnets.
-- An RDS databse
-```
-NOTE 1: This list DOES NOT include ALL of the resource blocks required for this infrastructure.  It is up to you to figure out what other resources need to be included to make this work.
-
-NOTE 2: Put your terraform files into your GitHub repo in the "Terraform" directory.
-
-Use the following "user_data" code for your EC2 resource block:
-```
-user_data = base64encode(templatefile("${path.module}/deploy.sh", {
-    rds_endpoint = aws_db_instance.main.endpoint,
-    docker_user = var.dockerhub_username,
-    docker_pass = var.dockerhub_password,
-    docker_compose = templatefile("${path.module}/compose.yaml", {
-      rds_endpoint = aws_db_instance.main.endpoint
-    })
-  }))
-```
-Also make sure that you also include the following for the EC2 resource block:
-```
-  depends_on = [
-    aws_db_instance.main,
-    aws_nat_gateway.main
-  ]
-```
-NOTE: Notice what is required for this user data block.  (var.dockerhub_username, var.dockerhub_password, deploy.sh, compose.yaml, and aws_db_instance.main.endpoint) Make sure that you declare the required variables and place the deploy.sh (must create) and compose.yaml (provided) in the same directory as your main.tf (Terraform directory in GitHub).
-
-6. Create a deploy.sh file that will run in "user_data".
-  
-  a. This script must (in this order):
-  
-  i. install docker and docker-compose;
-
-  ii. log into DockerHub;
-
-  iii. create the docker-compose.yaml with the following code:
-
-      ```
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Creating app directory..."
-    mkdir -p /app
-    cd /app
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Created and moved to /app"
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Creating docker-compose.yml..."
-    cat > docker-compose.yml <<EOF
-    ${docker_compose}
-    EOF
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] docker-compose.yml created"
-    
-    ```
-   Note: How is this code creating the docker_compose.yaml file? (Hint: Look at "user_data" and the "Jenkinsfile")
-
-   iv. run `docker-compose pull`
-
-   v. run `docker-compose up -d --force-recreate`
-
-   vi. Clean the server by running a docker system prune and logging out of dockerhub.  
-
-   Be sure to try to understand each of these commands as they are vital to the success of this workload.  
-
-   NOTE: You are not limited to running only these commands in this script.  If you want to include anything else to set up the server you are more than welcome to.
-
-7. Create Dockerfiles for the backend and frontend images
-
-  a. Name the Dockerfile for the backend "Dockerfile.backend"
-
-   i. Pull the python:3.9 base image
-
-   ii. Copy the "backend" directory into the image
-
-   iii. install `django-environ` and all other dependencies
-
-   iv. Run `python manage.py makemigrations account`, `python manage.py makemigrations payments`, `python manage.py makemigrations product`
-
-   v. Expose port 8000
-
-   vi. Set the command `python manage.py runserver 0.0.0.0:8000` to run when the container is started
-
-  b. Name the Dockerfile for the frontend "Dockerfile.frontend"
-
-   i. Pull the node:14 base image
-
-   ii. Copy the "frontend" directory into the image
-
-   iii. Run `npm install`
-
-   iv. Expose port 3000
-
-   v. Set the command `npm start` to run when the container is started
-
-  c. Save these files to the root directory of your GitHub Repository
-
-8. Modify the Jenkinsfile as needed to accomodate your files.
-
-9. Modify the compose.yml file as needed to accomodate your files (image tags).
-
-10. Create a Multi-Branch pipeline called "workload_6" and run the pipeline to deploy the application!
-
-11. Create a monitoring EC2 in the default VPC that will monitor the resources of the various servers.  (Hopefully you read through these instructions in it's entirety before you ran the pipeline so that you could configure the correct ports for node exporter.)
-
-12. Document! All projects have documentation so that others can read and understand what was done and how it was done. Create a README.md file in your repository that describes:
-
-	  a. The "PURPOSE" of the Workload,
-
-  	b. The "STEPS" taken (and why each was necessary/important),
-    
-  	c. A "SYSTEM DESIGN DIAGRAM" that is created in draw.io (IMPORTANT: Save the diagram as "Diagram.jpg" and upload it to the root directory of the GitHub repo.),
-
-	  d. "ISSUES/TROUBLESHOOTING" that may have occured,
-
-  	e. An "OPTIMIZATION" section for how you think this workload/infrastructure/CICD pipeline, etc. can be optimized further.  
-
-    f. A "CONCLUSION" statement as well as any other sections you feel like you want to include.
 
