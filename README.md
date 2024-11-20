@@ -31,9 +31,40 @@ Now that we have our working repository, we'll need to create a "Jenkins" server
 
 #### <ins>Jenkins Setup</ins>
 
-For our Jenkins server, we'll be using a t3.micro instance. 
+For our Jenkins server, we'll be using a t3.micro instance. We'll only need Jenkins on this EC2 so we'll only need to install Jenkins and all the software dependencies for Jenkins like Java 17.
+
+The script I used to install Jenkins can be [found here](https://github.com/jonwang22/ecommerce_docker_deployment/blob/main/Scripts/install_jenkins.sh).
 
 #### <ins>Docker & Terraform Setup</ins>
+
+For our Docker_Terraform instance, we're using a t3.medium since we'll be building images with docker and using terraform to create our infrastructure in our AWS account. We need to install Java17, Terraform, Docker, and AWS CLI (This can be optional). 
+
+The script I used to install all the tools mentioned before can be [found here](https://github.com/jonwang22/ecommerce_docker_deployment/blob/main/Scripts/install_docker_terraform.sh).
+
+Now, if we want Terraform to know which AWS account to build the infrastructure on, we'll need to configure AWS Profile via AWS CLI with our Secret Key and Secret Access Key. However, there's another method to circumvent the need for AWS CLI. This leads us to IAM Roles. We need to create an IAM Role for our Docker_Terraform instance to assume and then be able to build our Infrastructure. I created an IAM Role for the EC2 service, which created an EC2 Instance Profile. This Instance Profile is then attached to the Docker_Terraform instance and here is the policy for the IAM Role.
+
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "ec2.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole",
+            "Condition": {
+                "StringEquals": {
+                    "ec2:InstanceProfile": "arn:aws:iam::$AWS_ACCOUNT:instance-profile/TerraformEC2Role"
+                }
+            }
+        }
+    ]
+}
+```
+
+#### <ins>Jenkins Build-Node Setup</ins>
+
 
 #### <ins>Monitoring</ins>
 
@@ -63,25 +94,6 @@ For our Jenkins server, we'll be using a t3.micro instance.
 3. Create a t3.medium EC2 called "Docker_Terraform". This will be your Jenkins NODE instance. Install Java 17, Terraform, Docker, and AWS CLI onti it.  For this workload it would be easiest to use the same .pem key for both of these instances to avoid confusion when trying to connect them.
 
 NOTE: Getting around using IAM User long lived credentials for Secret and Secret Access keys, I created an IAM role for EC2 and an EC2 Instance Profile so that Terraform Server can assume that role and conduct its build/operations as needed on the account.
-```
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "Service": "ec2.amazonaws.com"
-            },
-            "Action": "sts:AssumeRole",
-            "Condition": {
-                "StringEquals": {
-                    "ec2:InstanceProfile": "arn:aws:iam::783764590292:instance-profile/TerraformEC2Role"
-                }
-            }
-        }
-    ]
-}
-```
 
    NOTE: Make sure you configure AWS CLI and that Terraform can create infrastructure using your credentials (Optional: Consider adding a verification in your pipeline stage to check for this to avoid errors).
 
