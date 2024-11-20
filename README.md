@@ -123,6 +123,54 @@ The code block we need to modify looks like this.
 
 ### <ins>Infrastructure as Code - Terraform</ins>
 
+For the infrastructure, I wrote modules to break out my code. I have VPC, EC2, RDS, and ALB modules. Below sections are for each module and has a list of each component created within the modules. If needed please refer to the main.tfs in each module for more information.
+
+#### <ins>VPC Module</ins>
+
+Contains:
+```
+- 1x Custom VPC
+- 2x Public Subnets
+- 2x Private Subnets
+- 1x Internet Gateway
+- 2x Elastic IPs
+- 2x NAT Gateways
+- 1x Public Route Table and associations to 2x Public Subnets
+- 2x Private Route Tables and associations to respective Private Subnets
+- 1x VPC Peering Connection
+```
+
+#### <ins>EC2 Module</ins>
+
+Contains:
+```
+- 1x Terraform Generated SSH Key to use for EC2s
+- 2x Bastion Servers
+- 1x Bastion Security Group
+- 2x App Servers
+- 1x App Security Group
+```
+
+#### <ins>RDS Module</ins>
+
+Contains:
+```
+- 1x Postgres Instance
+- 1x DB Subnet Group
+- 1x RDS Security Group
+```
+
+#### <ins>ALB Module</ins>
+
+Contains:
+```
+- 1x Application Load Balancer
+- 1x ALB Security Group
+- 1x Listener
+- 1x Target Group
+- 2x Target Group Attachments
+```
+
 ### <ins>Terraform EC2 User Data and Deploy Script</ins>
 
 ### <ins>Docker</ins>
