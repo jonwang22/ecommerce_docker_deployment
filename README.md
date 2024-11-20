@@ -35,9 +35,9 @@ For our Jenkins server, we'll be using a t3.micro instance. We'll only need Jenk
 
 The script I used to install Jenkins can be [found here](https://github.com/jonwang22/ecommerce_docker_deployment/blob/main/Scripts/install_jenkins.sh).
 
-#### <ins>Docker & Terraform Setup</ins>
+#### <ins>Docker & Terraform (DT) Setup</ins>
 
-For our Docker_Terraform instance, we're using a t3.medium since we'll be building images with docker and using terraform to create our infrastructure in our AWS account. We need to install Java17, Terraform, Docker, and AWS CLI (This can be optional). 
+For our Docker_Terraform(DT) instance, we're using a t3.medium since we'll be building images with docker and using terraform to create our infrastructure in our AWS account. We need to install Java17, Terraform, Docker, and AWS CLI (This can be optional). 
 
 The script I used to install all the tools mentioned before can be [found here](https://github.com/jonwang22/ecommerce_docker_deployment/blob/main/Scripts/install_docker_terraform.sh).
 
@@ -64,9 +64,62 @@ Now, if we want Terraform to know which AWS account to build the infrastructure 
 ```
 
 #### <ins>Jenkins Build-Node Setup</ins>
+Now that we have our Jenkins server and Docker_Terraform server, we'll need to setup our Docker_Terraform The next few steps will guide you on how to set up a Jenkins Node Agent. 
 
+There are a few reasons why DT is being used as a build-node.
+
+* Security on our pipeline, only those who have permissions to build the pipeline will have permissions to build and deploy the pipeline. Especially if our Jenkins server is being used by multiple teams.
+* t3.medium is for handling the compute necessary for the build and also Terraform apply. Bigger instance allows for more resources for the build-node.
+
+To set up the build-node on to Jenkins, we need to make sure both instances are running and then log into the Jenkins console in the Jenkins Manager instance.  On the left side of the home page under the navigation panel and "Build Queue", Click on "Build Executor Status", Click on "New Node", Name the node "build-node" and select "Permanent Agent".
+
+On the next screen,
+  
+      i. "Name" should read "build-node"
+
+      ii. "Remote root directory" == "/home/ubuntu/agent"
+
+      iii. "Labels" == "build-node"
+
+      iv. "Usage" == "Only build jobs with label expressions matching this node"
+
+      v. "Launch method" == "Launch agents via SSH"
+
+      vi. "Host" is the Private IP address of the Node Server
+
+      vii. Click on "+ ADD" under "Credentials" and select "Jenkins".
+
+      viii. Under "Kind", select "SSH Username with private key"
+
+      ix. "ID" == "build-node"
+
+      x. "Username" == "ubuntu"
+
+      xi. "Private Key" == "Enter directly" (paste the entire private key of the Jenkins node instance here. This must be the .pem file)
+
+      xi. Click "Add" and then select the credentials you just created.  
+
+      xii. "Host Key Verification Strategy" == "Non verifying Verification Strategy"
+
+      xiii. Click on "Save"
+
+Back on the Dashboard, you should see "build-node" under "Build Executor Status".  Click on it and then view the logs.  If this was successful it will say that the node is "connected and online".
 
 #### <ins>Monitoring</ins>
+
+To monitor our environment, we need a monitoring server. We'll use a t3.micro and install Prometheus and Grafana. The script to install the services can be [found here](https://github.com/jonwang22/ecommerce_docker_deployment/blob/main/Scripts/install_prometheus_grafana.sh). We will be installing Node Exporter on both our app instances and use those as our Prometheus targets to pull metrics from. Grafana will be set up to display the data on a dashboard.
+
+In order to set up Prometheus to target Node Exporter on the various instances, we need to configure the Prometheus.yml file.
+Since we have VPC Peering, we can use the Private IPs of the production instances. 
+
+The code block we need to modify looks like this.
+```
+/opt/prometheus/prometheus.yml
+
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['localhost:9100'] # <----CHANGE 'localhost' to private IP of target instance
+```
 
 ### <ins>Infrastructure as Code - Terraform</ins>
 
